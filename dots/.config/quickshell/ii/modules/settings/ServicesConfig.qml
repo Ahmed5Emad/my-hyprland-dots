@@ -230,6 +230,19 @@ ContentPage {
     // }
 
     ContentSection {
+        icon: "videogame_asset"
+        title: Translation.tr("Game Launcher")
+
+        ConfigSwitch {
+            text: Translation.tr("Enable Steam integration")
+            checked: Config.options.games.steam
+            onCheckedChanged: {
+                Config.options.games.steam = checked;
+            }
+        }
+    }
+
+    ContentSection {
         icon: "weather_mix"
         title: Translation.tr("Weather")
         ConfigRow {

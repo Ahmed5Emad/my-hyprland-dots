@@ -57,6 +57,9 @@ post_process() {
 
     handle_kde_material_you_colors &
     "$SCRIPT_DIR/code/material-code-set-color.sh" &
+    
+    # Generate vscode theme
+    matugen image "$wallpaper_path" -m "$mode_flag" -t "$type_flag" --source-color-index 0 &
 }
 
 check_and_prompt_upscale() {

@@ -173,6 +173,17 @@ function install_google_sans_flex(){
   realpath -se "$target_dir" >> "${INSTALLED_LISTFILE}"
 }
 
+function install_tela_circle_icons(){
+  local target_dir="${XDG_DATA_HOME}/icons/Tela-circle"
+  if [ -d "$target_dir" ]; then return; fi
+  local src_dir="$REPO_ROOT/cache/Tela-circle-icon-theme"
+  x mkdir -p "$src_dir"
+  try git clone https://github.com/vinceliuice/Tela-circle-icon-theme.git "$src_dir"
+  x cd "$src_dir"
+  x ./install.sh -a
+  x cd "$REPO_ROOT"
+}
+
 #####################################################################################
 # In case some dirs does not exists
 for i in "$XDG_BIN_HOME" "$XDG_CACHE_HOME" "$XDG_CONFIG_HOME" "$XDG_DATA_HOME"; do
@@ -209,6 +220,9 @@ if [[ ! "$OS_GROUP_ID" == "fedora" ]]; then
   showfun install_google_sans_flex
   v install_google_sans_flex
 fi
+
+showfun install_tela_circle_icons
+v install_tela_circle_icons
 
 #####################################################################################
 

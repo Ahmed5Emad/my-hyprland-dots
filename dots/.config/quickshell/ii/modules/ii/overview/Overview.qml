@@ -14,6 +14,7 @@ import Quickshell.Hyprland
 Scope {
     id: overviewScope
     property bool dontAutoCancelSearch: false
+    property bool searchOnly: false
 
     PanelWindow {
         id: panelWindow
@@ -44,6 +45,7 @@ Scope {
                 if (!GlobalStates.overviewOpen) {
                     searchWidget.disableExpandAnimation();
                     overviewScope.dontAutoCancelSearch = false;
+                    overviewScope.searchOnly = false;
                     GlobalFocusGrab.dismiss();
                 } else {
                     if (!overviewScope.dontAutoCancelSearch) {
@@ -100,7 +102,7 @@ Scope {
             Loader {
                 id: overviewLoader
                 anchors.horizontalCenter: parent.horizontalCenter
-                active: GlobalStates.overviewOpen && (Config?.options.overview.enable ?? true)
+                active: GlobalStates.overviewOpen && (Config?.options.overview.enable ?? true) && !overviewScope.searchOnly
                 sourceComponent: OverviewWidget {
                     screen: panelWindow.screen
                     visible: (panelWindow.searchingText == "")
@@ -110,21 +112,23 @@ Scope {
     }
 
     function toggleClipboard() {
-        if (GlobalStates.overviewOpen && overviewScope.dontAutoCancelSearch) {
+        if (GlobalStates.overviewOpen && overviewScope.dontAutoCancelSearch && overviewScope.searchOnly) {
             GlobalStates.overviewOpen = false;
             return;
         }
         overviewScope.dontAutoCancelSearch = true;
+        overviewScope.searchOnly = true;
         panelWindow.setSearchingText(Config.options.search.prefix.clipboard);
         GlobalStates.overviewOpen = true;
     }
 
     function toggleEmojis() {
-        if (GlobalStates.overviewOpen && overviewScope.dontAutoCancelSearch) {
+        if (GlobalStates.overviewOpen && overviewScope.dontAutoCancelSearch && overviewScope.searchOnly) {
             GlobalStates.overviewOpen = false;
             return;
         }
         overviewScope.dontAutoCancelSearch = true;
+        overviewScope.searchOnly = true;
         panelWindow.setSearchingText(Config.options.search.prefix.emojis);
         GlobalStates.overviewOpen = true;
     }
@@ -173,7 +177,12 @@ Scope {
         description: "Toggles overview on press"
 
         onPressed: {
-            GlobalStates.overviewOpen = !GlobalStates.overviewOpen;
+            if (GlobalStates.overviewOpen && overviewScope.searchOnly) {
+                overviewScope.searchOnly = false;
+            } else {
+                overviewScope.searchOnly = false;
+                GlobalStates.overviewOpen = !GlobalStates.overviewOpen;
+            }
         }
     }
     GlobalShortcut {
@@ -189,7 +198,12 @@ Scope {
                 GlobalStates.superReleaseMightTrigger = true;
                 return;
             }
-            GlobalStates.overviewOpen = !GlobalStates.overviewOpen;
+            if (GlobalStates.overviewOpen && !overviewScope.searchOnly) {
+                overviewScope.searchOnly = true;
+            } else {
+                if (!GlobalStates.overviewOpen) overviewScope.searchOnly = true;
+                GlobalStates.overviewOpen = !GlobalStates.overviewOpen;
+            }
         }
     }
     GlobalShortcut {

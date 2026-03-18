@@ -7,6 +7,7 @@
 ////@ pragma Env QT_SCALE_FACTOR=1
 
 import "modules/common"
+import "modules/common/functions"
 import "services"
 import "panelFamilies"
 
@@ -72,6 +73,31 @@ ShellRoot {
         description: "Cycles panel family"
 
         onPressed: root.cyclePanelFamily()
+    }
+
+    GlobalShortcut {
+        name: "gameLauncherToggle"
+        description: "Toggles the game launcher"
+        onPressed: GlobalStates.gameLauncherOpen = !GlobalStates.gameLauncherOpen
+    }
+
+    Timer {
+        id: roundingSyncTimer
+        interval: 100
+        repeat: false
+        onTriggered: {
+            const rounding = Config.options.appearance.rounding;
+            Quickshell.execDetached(["hyprctl", "keyword", "decoration:rounding", rounding.toString()]);
+            const configPath = `${FileUtils.trimFileProtocol(Directories.config)}/hypr/hyprland/general.conf`;
+            Quickshell.execDetached(["bash", "-c", `sed -i 's/rounding = .*/rounding = ${rounding}/' '${configPath}'`]);
+        }
+    }
+
+    Connections {
+        target: Config.ready ? Config.options.appearance : null
+        function onRoundingChanged() {
+            roundingSyncTimer.restart();
+        }
     }
 }
 

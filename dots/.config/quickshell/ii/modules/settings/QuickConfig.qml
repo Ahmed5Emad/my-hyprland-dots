@@ -322,7 +322,22 @@ ContentPage {
                     ]
                 }
             }
-            
+
+            ContentSubsection {
+                title: Translation.tr("Window and UI rounding")
+
+                ConfigSpinBox {
+                    icon: "rounded_corner"
+                    text: Translation.tr("Edge rounding")
+                    value: Config.options.appearance.rounding
+                    from: 0
+                    to: 50
+                    stepSize: 1
+                    onValueChanged: {
+                        Config.options.appearance.rounding = value;
+                    }
+                }
+            }
         }
     }
 
