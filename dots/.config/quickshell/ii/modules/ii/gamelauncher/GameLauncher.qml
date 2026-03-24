@@ -28,7 +28,7 @@ Scope {
             bottom: true
             left: true
         }
-        width: screen.width * 0.25
+        width: screen.width * 0.20
 
         // Replicate rofi-like dismiss behavior
         Connections {
@@ -65,7 +65,8 @@ Scope {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     model: GameLauncher.games
-                    spacing: 15
+                    keyNavigationWraps: true
+                    spacing: 10
                     clip: true
                     topMargin: 20
                     bottomMargin: 20

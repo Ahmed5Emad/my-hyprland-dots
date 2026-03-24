@@ -1,3 +1,4 @@
+import qs
 import qs.modules.common
 import qs.services
 import QtQuick
@@ -16,6 +17,7 @@ Singleton {
     property bool mediaControlsOpen: false
     property bool osdBrightnessOpen: false
     property bool osdVolumeOpen: false
+    property bool osdKbdOpen: false
     property bool oskOpen: false
     property bool gameLauncherOpen: false
     property bool overlayOpen: false

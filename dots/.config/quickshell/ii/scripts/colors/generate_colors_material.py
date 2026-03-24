@@ -74,7 +74,18 @@ if args.path is not None:
     if wsize_new < wsize or hsize_new < hsize:
         image = image.resize((wsize_new, hsize_new), Image.Resampling.BICUBIC)
     colors = QuantizeCelebi(list(image.getdata()), 128)
-    argb = Score.score(colors)[0]
+    scored_colors = Score.score(colors)
+    
+    # Prioritize Blue over Purple/Magenta if both are vibrant
+    # HCT Hue ~250-275 is clear Blue. ~280+ starts turning Purple/Lavender.
+    selected_argb = scored_colors[0]
+    for argb in scored_colors[:5]:
+        hct_temp = Hct.from_int(argb)
+        if 245 <= hct_temp.hue <= 275 and hct_temp.chroma > 40:
+            selected_argb = argb
+            break
+            
+    argb = selected_argb
 
     if args.cache is not None:
         with open(args.cache, 'w') as file:
@@ -139,7 +150,7 @@ if args.termscheme is not None:
 
     primary_color_argb = hex_to_argb(material_colors['primary_paletteKeyColor'])
     for color, val in term_source_colors.items():
-        if(args.scheme == 'monochrome') :
+        if(args.scheme == 'scheme-monochrome') :
             term_colors[color] = val
             continue
         if args.blend_bg_fg and color == "term0":
@@ -150,6 +161,18 @@ if args.termscheme is not None:
             harmonized = harmonize(hex_to_argb(val), primary_color_argb, args.harmonize_threshold, args.harmony)
             harmonized = boost_chroma_tone(harmonized, 1, 1 + (args.term_fg_boost * (1 if darkmode else -1)))
         term_colors[color] = argb_to_hex(harmonized)
+
+if args.cache is not None:
+    try:
+        primary_cache_path = args.cache.replace('color.txt', 'primary_color.txt')
+        with open(primary_cache_path, 'w') as file:
+            file.write(material_colors.get('primary', material_colors.get('primary_paletteKeyColor', '#808080')))
+            
+        icon_cache_path = args.cache.replace('color.txt', 'icon_color.txt')
+        with open(icon_cache_path, 'w') as file:
+            file.write(material_colors.get('primary_paletteKeyColor', material_colors.get('primary', '#808080')))
+    except Exception:
+        pass
 
 if args.debug == False:
     print(f"$darkmode: {darkmode};")

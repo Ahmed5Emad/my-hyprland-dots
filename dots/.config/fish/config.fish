@@ -24,5 +24,9 @@ if status is-interactive # Commands to run in interactive sessions can go here
     alias ls 'eza --icons'
     alias pamcan pacman
     alias q 'qs -c ii'
+
+    # Go environment
+    set -gx GOPATH "$HOME/.local/share/go"
+    fish_add_path "$GOPATH/bin"
     
 end

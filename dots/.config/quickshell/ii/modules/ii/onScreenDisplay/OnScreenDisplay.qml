@@ -16,6 +16,7 @@ Scope {
     property var focusedScreen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name)
 
     property string currentIndicator: "volume"
+    property real kbdValue: 0
     property var indicators: [
         {
             id: "volume",
@@ -25,10 +26,21 @@ Scope {
             id: "brightness",
             sourceUrl: "indicators/BrightnessIndicator.qml"
         },
+        {
+            id: "keyboard",
+            sourceUrl: "indicators/KbdBacklightIndicator.qml"
+        },
     ]
 
     function triggerOsd() {
         GlobalStates.osdVolumeOpen = true;
+        osdTimeout.restart();
+    }
+
+    function triggerKbd(value) {
+        root.kbdValue = value;
+        root.currentIndicator = "keyboard";
+        GlobalStates.osdKbdOpen = true;
         osdTimeout.restart();
     }
 
@@ -39,6 +51,7 @@ Scope {
         running: false
         onTriggered: {
             GlobalStates.osdVolumeOpen = false;
+            GlobalStates.osdKbdOpen = false;
             root.protectionMessage = "";
         }
     }
@@ -81,7 +94,7 @@ Scope {
 
     Loader {
         id: osdLoader
-        active: GlobalStates.osdVolumeOpen
+        active: GlobalStates.osdVolumeOpen || GlobalStates.osdKbdOpen
 
         sourceComponent: PanelWindow {
             id: osdRoot
@@ -113,7 +126,7 @@ Scope {
 
             implicitWidth: columnLayout.implicitWidth
             implicitHeight: columnLayout.implicitHeight
-            visible: osdLoader.active
+            visible: true
 
             ColumnLayout {
                 id: columnLayout
@@ -129,7 +142,10 @@ Scope {
                     MouseArea {
                         anchors.fill: parent
                         hoverEnabled: true
-                        onEntered: GlobalStates.osdVolumeOpen = false
+                        onEntered: {
+                            GlobalStates.osdVolumeOpen = false;
+                            GlobalStates.osdKbdOpen = false;
+                        }
                     }
 
                     Column {
@@ -144,6 +160,12 @@ Scope {
                         Loader {
                             id: osdIndicatorLoader
                             source: root.indicators.find(i => i.id === root.currentIndicator)?.sourceUrl
+                            Binding {
+                                target: osdIndicatorLoader.item
+                                property: "value"
+                                value: root.currentIndicator === "keyboard" ? root.kbdValue : osdIndicatorLoader.item.value
+                                when: osdIndicatorLoader.status === Loader.Ready && root.currentIndicator === "keyboard"
+                            }
                         }
 
                         Item {
@@ -203,6 +225,18 @@ Scope {
 
         function toggle() {
             GlobalStates.osdVolumeOpen = !GlobalStates.osdVolumeOpen;
+        }
+    }
+
+    IpcHandler {
+        target: "osdKbd"
+
+        function trigger(value: real) {
+            root.triggerKbd(value);
+        }
+
+        function hide() {
+            GlobalStates.osdKbdOpen = false;
         }
     }
     GlobalShortcut {

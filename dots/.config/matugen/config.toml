@@ -29,6 +29,10 @@ output_path = '~/.config/gtk-4.0/gtk.css'
 input_path = '~/.config/matugen/templates/kde/color.txt'
 output_path = '~/.local/state/quickshell/user/generated/color.txt'
 
+[templates.vscode_theme]
+input_path = '~/.config/matugen/templates/vscode-theme.json'
+output_path = '~/.vscode/extensions/end4.end4-system-theme-1.0.0/themes/theme.json'
+
 [templates.wallpaper]
 input_path = '~/.config/matugen/templates/wallpaper.txt'
 output_path = '~/.local/state/quickshell/user/generated/wallpaper/path.txt'
