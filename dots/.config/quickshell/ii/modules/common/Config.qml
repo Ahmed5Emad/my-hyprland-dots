@@ -591,6 +591,7 @@ Singleton {
 
             property JsonObject games: JsonObject {
                 property bool steam: false
+                property bool heroic: false
             }
 
             property JsonObject hacks: JsonObject {

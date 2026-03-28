@@ -76,16 +76,7 @@ if args.path is not None:
     colors = QuantizeCelebi(list(image.getdata()), 128)
     scored_colors = Score.score(colors)
     
-    # Prioritize Blue over Purple/Magenta if both are vibrant
-    # HCT Hue ~250-275 is clear Blue. ~280+ starts turning Purple/Lavender.
-    selected_argb = scored_colors[0]
-    for argb in scored_colors[:5]:
-        hct_temp = Hct.from_int(argb)
-        if 245 <= hct_temp.hue <= 275 and hct_temp.chroma > 40:
-            selected_argb = argb
-            break
-            
-    argb = selected_argb
+    argb = scored_colors[0]
 
     if args.cache is not None:
         with open(args.cache, 'w') as file:

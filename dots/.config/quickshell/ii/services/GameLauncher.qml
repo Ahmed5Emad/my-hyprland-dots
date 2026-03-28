@@ -20,6 +20,9 @@ Singleton {
         if (Config.options.games.steam) {
             cmd.push("--steam");
         }
+        if (Config.options.games.heroic) {
+            cmd.push("--heroic");
+        }
         catalogProc.command = cmd;
         catalogProc.running = true;
     }

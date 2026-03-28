@@ -240,6 +240,14 @@ ContentPage {
                 Config.options.games.steam = checked;
             }
         }
+
+        ConfigSwitch {
+            text: Translation.tr("Enable Heroic integration")
+            checked: Config.options.games.heroic
+            onCheckedChanged: {
+                Config.options.games.heroic = checked;
+            }
+        }
     }
 
     ContentSection {
