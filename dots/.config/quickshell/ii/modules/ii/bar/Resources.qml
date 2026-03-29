@@ -45,6 +45,15 @@ MouseArea {
             warningThreshold: Config.options.bar.resources.cpuWarningThreshold
         }
 
+        Resource {
+            iconName: "developer_board"
+            percentage: ResourceUsage.gpuUsage
+            shown: Config.options.bar.resources.alwaysShowGpu || 
+                root.alwaysShowAllResources
+            Layout.leftMargin: shown ? 6 : 0
+            warningThreshold: Config.options.bar.resources.gpuWarningThreshold
+        }
+
     }
 
     ResourcesPopup {

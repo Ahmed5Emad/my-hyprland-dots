@@ -20,16 +20,23 @@ Singleton {
 	property real swapUsed: swapTotal - swapFree
     property real swapUsedPercentage: swapTotal > 0 ? (swapUsed / swapTotal) : 0
     property real cpuUsage: 0
+    property real gpuUsage: 0
+    property real gpuMemoryUsed: 0
+    property real gpuMemoryTotal: 1
+    property real gpuMemoryUsedPercentage: gpuMemoryUsed / gpuMemoryTotal
     property var previousCpuStats
 
     property string maxAvailableMemoryString: kbToGbString(ResourceUsage.memoryTotal)
     property string maxAvailableSwapString: kbToGbString(ResourceUsage.swapTotal)
+    property string maxAvailableGpuString: "--"
     property string maxAvailableCpuString: "--"
 
     readonly property int historyLength: Config?.options.resources.historyLength ?? 60
     property list<real> cpuUsageHistory: []
     property list<real> memoryUsageHistory: []
     property list<real> swapUsageHistory: []
+    property list<real> gpuUsageHistory: []
+    property list<real> gpuMemoryUsageHistory: []
 
     function kbToGbString(kb) {
         return (kb / (1024 * 1024)).toFixed(1) + " GB";
@@ -53,10 +60,21 @@ Singleton {
             cpuUsageHistory.shift()
         }
     }
+    function updateGpuUsageHistory() {
+        gpuUsageHistory = [...gpuUsageHistory, gpuUsage]
+        if (gpuUsageHistory.length > historyLength) {
+            gpuUsageHistory.shift()
+        }
+        gpuMemoryUsageHistory = [...gpuMemoryUsageHistory, gpuMemoryUsedPercentage]
+        if (gpuMemoryUsageHistory.length > historyLength) {
+            gpuMemoryUsageHistory.shift()
+        }
+    }
     function updateHistories() {
         updateMemoryUsageHistory()
         updateSwapUsageHistory()
         updateCpuUsageHistory()
+        updateGpuUsageHistory()
     }
 
 	Timer {
@@ -92,6 +110,9 @@ Singleton {
                 previousCpuStats = { total, idle }
             }
 
+            // Fetch GPU usage
+            gpuProc.running = true
+
             root.updateHistories()
             interval = Config.options?.resources?.updateInterval ?? 3000
         }
@@ -99,6 +120,29 @@ Singleton {
 
 	FileView { id: fileMeminfo; path: "/proc/meminfo" }
     FileView { id: fileStat; path: "/proc/stat" }
+
+    Process {
+        id: gpuProc
+        environment: ({
+            LANG: "C",
+            LC_ALL: "C"
+        })
+        command: ["nvidia-smi", "--query-gpu=utilization.gpu,memory.used,memory.total", "--format=csv,noheader,nounits"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const output = text.trim()
+                if (output) {
+                    const parts = output.split(",").map(s => parseFloat(s.trim()))
+                    if (parts.length >= 3) {
+                        gpuUsage = parts[0] / 100
+                        gpuMemoryUsed = parts[1] * 1024 // Convert MB to KB
+                        gpuMemoryTotal = parts[2] * 1024 // Convert MB to KB
+                        maxAvailableGpuString = (parts[2] / 1024).toFixed(1) + " GB"
+                    }
+                }
+            }
+        }
+    }
 
     Process {
         id: findCpuMaxFreqProc
