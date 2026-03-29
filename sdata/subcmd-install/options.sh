@@ -45,8 +45,8 @@ cleancache(){
 
 # `man getopt` to see more
 para=$(getopt \
-  -o hfFk:cs \
-  -l help,force,firstrun,fontset:,clean,skip-allgreeting,skip-alldeps,skip-allsetups,skip-allfiles,ignore-outdate,skip-sysupdate,skip-plasmaintg,skip-backup,skip-quickshell,skip-fish,skip-hyprland,skip-fontconfig,skip-miscconf,core,exp-files,via-nix \
+  -o hfFk:csu \
+  -l help,force,firstrun,fontset:,clean,skip-allgreeting,skip-alldeps,skip-allsetups,skip-allfiles,ignore-outdate,skip-sysupdate,skip-plasmaintg,skip-backup,skip-quickshell,skip-fish,skip-hyprland,skip-fontconfig,skip-miscconf,core,exp-files,via-nix,update \
   -n "$0" -- "$@")
 [ $? != 0 ] && echo "$0: Error when getopt, please recheck parameters." && exit 1
 #####################################################################################
@@ -72,6 +72,9 @@ while true ; do
     ## Ones without parameter
     -f|--force) ask=false;shift;;
     -F|--firstrun) INSTALL_FIRSTRUN=true;shift;;
+    -u|--update) AUTO_UPDATE_GIT=true;shift;;
+    --skip-allgreeting) SKIP_ALLGREETING=true;shift;;
+
     --skip-allgreeting) SKIP_ALLGREETING=true;shift;;
     --skip-alldeps) SKIP_ALLDEPS=true;shift;;
     --skip-allsetups) SKIP_ALLSETUPS=true;shift;;

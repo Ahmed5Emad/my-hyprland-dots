@@ -14,7 +14,7 @@ set -e
 showhelp_global(){
 printf "${STY_CYAN}NOTE:
   The old \"./install.sh\"   is now \"./setup install\"
-  The old \"./update.sh\"    is now \"./setup exp-update\"
+  The old \"./update.sh\"    is now \"./setup update\"
   The old \"./uninstall.sh\" is now \"./setup uninstall\"${STY_RST}
 
 [$0]: Handle setup for illogical-impulse.
@@ -24,15 +24,15 @@ Syntax:
 
 Subcommands:
   install        (Re)Install/Update illogical-impulse.
-                 Note: To update to the latest, manually run \"git stash && git pull\" first.
+                 Use -u or --update to automatically pull latest changes.
   install-deps   Run the install step \"1. Install dependencies\"
   install-setups Run the install step \"2. Setup for permissions/services etc\"
   install-files  Run the install step \"3. Copying config files\"
-  resetfirstrun  Reset firstrun state.
+  update         Update illogical-impulse by syncing configuration files.
   uninstall      Uninstall illogical-impulse.
 
-  exp-update     (Experimental) Update illogical-impulse without fully reinstall.
   exp-merge      (Experimental) Merge upstream changes with local configs using git rebase.
+  resetfirstrun  Reset firstrun state.
 
   virtmon        (For dev only) Create virtual monitors for testing multi-monitors.
   checkdeps      (For dev only) Check whether pkgs exist in AUR or repos of Arch.
@@ -49,7 +49,7 @@ case $1 in
   # Global help
   ""|help|--help|-h)showhelp_global;exit;;
   # Correct subcommand
-  install|uninstall|exp-update|exp-merge|resetfirstrun|checkdeps|virtmon)
+  install|uninstall|update|exp-merge|resetfirstrun|checkdeps|virtmon)
     SUBCMD_NAME=$1
     SUBCMD_DIR=./sdata/subcmd-$1
     shift;;
@@ -71,6 +71,21 @@ case ${SUBCMD_NAME} in
       $function
     done
     pause
+
+    if [[ "${AUTO_UPDATE_GIT:-false}" == true ]]; then
+      log_info "Updating repository from remote..."
+      if ! git diff --quiet || ! git diff --cached --quiet; then
+        log_warning "You have uncommitted changes. Stashing them..."
+        git stash push -m "Auto-stash before install update"
+      fi
+      if git pull --ff-only; then
+        log_success "Successfully updated repository"
+      else
+        log_warning "Failed to pull changes. Continuing with local version."
+      fi
+      git stash pop 2>/dev/null || true
+    fi
+
     # Initialize sudo keepalive for the entire install process
     sudo_init_keepalive
     # Set trap to cleanup when this subcommand exits

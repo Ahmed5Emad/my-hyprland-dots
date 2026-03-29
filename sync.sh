@@ -35,4 +35,35 @@ find "$REPO_CONFIG" -maxdepth 1 -type f | while read -r file; do
     fi
 done
 
-echo "Sync complete. Only matching folders within .config were touched."
+echo "Sync complete."
+
+# Versioning and Git logic
+VERSION_FILE="$ACTUAL_CONFIG/illogical-impulse/version"
+
+if git diff --quiet && git diff --cached --quiet; then
+    echo "No changes to commit in the repository."
+else
+    echo "Changes detected."
+    git add .
+    
+    # Ask for commit message
+    default_msg="sync: update configs from local PC ($(date +%Y-%m-%d))"
+    echo "Enter commit message (Leave empty for default: '$default_msg'):"
+    read -r user_msg
+    
+    commit_msg="${user_msg:-$default_msg}"
+    
+    if git commit -m "$commit_msg"; then
+        # If push is successful, update the local version signature
+        if git push; then
+            echo "Push successful. Updating version signature..."
+            git rev-parse HEAD > "$VERSION_FILE"
+        else
+            echo "Push failed. You may need to manual pull/merge."
+        fi
+    else
+        echo "Commit failed."
+    fi
+fi
+
+echo "Only matching folders within .config were touched."

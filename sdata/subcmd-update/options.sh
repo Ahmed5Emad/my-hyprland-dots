@@ -1,4 +1,4 @@
-# Handle args for subcmd: exp-update
+# Handle args for subcmd: update
 # shellcheck shell=bash
 
 showhelp(){
