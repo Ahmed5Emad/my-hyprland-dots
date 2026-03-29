@@ -30,6 +30,10 @@ Scope {
             id: "keyboard",
             sourceUrl: "indicators/KbdBacklightIndicator.qml"
         },
+        {
+            id: "gamma",
+            sourceUrl: "indicators/GammaIndicator.qml"
+        },
     ]
 
     function triggerOsd() {
@@ -61,6 +65,15 @@ Scope {
         function onBrightnessChanged() {
             root.protectionMessage = "";
             root.currentIndicator = "brightness";
+            root.triggerOsd();
+        }
+    }
+
+    Connections {
+        target: Hyprsunset
+        function onGammaChangeAttempt() {
+            root.protectionMessage = "";
+            root.currentIndicator = "gamma";
             root.triggerOsd();
         }
     }
