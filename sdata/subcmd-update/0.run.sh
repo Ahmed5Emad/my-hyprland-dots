@@ -3,15 +3,31 @@
 
 # shellcheck shell=bash
 
+#####################################################################################
+# Notes by @clsty:
 #
-# update.sh - Enhanced dotfiles update script
+# I'm not the one who developed this script (see issue#2284 which discussed about the history).
+# However it contains many unnecessary logics. This is typically what AI will do.
+# I don't really care if it's AI-generated or not, it's just an extra option in addition to ./setup install, so as long as the users say it works, it should be fine.
+# However, it's not easy to maintain something like this.
+# The redundant logic should be cleaned up someday.
+#
+# This also applies for exp-update.tester.sh, TBH I don't think that file is really needed, and it also looks like AI-generated. Just guessing though.
+#####################################################################################
+#
+# exp-update.sh - Enhanced dotfiles update script
 #
 # Features:
 # - Auto-detect repository structure (dots/ prefix or direct config)
 # - Pull latest commits from remote
 # - Rebuild packages if PKGBUILD files changed (user choice)
 # - Handle config file conflicts with user choices
-# - Respect .updateignore file for exclusions
+# - Respect .updateignore file for exclusions with flexible pattern matching:
+#   - Exact matches (e.g., "path/to/file")
+#   - Directory patterns (e.g., "path/to/dir/")
+#   - Wildcards (e.g., "*.log", "path/*/file")
+#   - Root-relative patterns (e.g., "/.config")
+#   - Substring matching (prefix with "**", e.g., "**temp" matches any path containing "temp")
 #
 set -euo pipefail
 
@@ -682,26 +698,18 @@ build_packages() {
 get_changed_files() {
   local dir_path="$1"
 
-  if [[ "${FORCE_CHECK:-false}" == true ]]; then
+  if [[ "$FORCE_CHECK" == true ]]; then
     find "$dir_path" -type f -print0 2>/dev/null
     return
   fi
   
-  # Try git-based detection using stored version hash
-  local local_version=""
-  if [[ -f "$VERSION_FILE" ]]; then
-    local_version=$(cat "$VERSION_FILE")
-    if ! git rev-parse --verify "$local_version" &>/dev/null; then
-      local_version="" # Invalid or non-existent hash
-    fi
-  fi
-
-  if [[ -n "$local_version" ]]; then
+  # Try git-based detection first
+  if git rev-parse --verify HEAD@{1} &>/dev/null 2>&1; then
     local temp_file
     temp_file=$(mktemp)
     
-    # Get changed files between local_version and HEAD
-    git diff --name-only --diff-filter=ACMR "$local_version" HEAD 2>/dev/null | \
+    # Get changed files with specific filters (Added, Copied, Modified, Renamed)
+    git diff --name-only --diff-filter=ACMR HEAD@{1} HEAD 2>/dev/null | \
       while IFS= read -r file; do
         local full_path="${REPO_ROOT}/${file}"
         if [[ "$full_path" == "$dir_path"/* ]] && [[ -f "$full_path" ]]; then
@@ -718,24 +726,16 @@ get_changed_files() {
     rm -f "$temp_file"
   fi
   
-  # Fallback: check all files if no version or no changes found (could be fresh clone)
+  # Fallback: check all files
   find "$dir_path" -type f -print0 2>/dev/null
 }
 
-# Function to check if we have new commits relative to stored version
+# Function to check if we have new commits
 has_new_commits() {
-  if [[ -f "$VERSION_FILE" ]]; then
-    local local_version
-    local_version=$(cat "$VERSION_FILE")
-    if git rev-parse --verify "$local_version" &>/dev/null; then
-      [[ "$(git rev-parse HEAD)" != "$(git rev-parse "$local_version")" ]]
-      return
-    fi
-  fi
-  # Fallback to reflog if no version file
   if git rev-parse --verify HEAD@{1} &>/dev/null; then
     [[ "$(git rev-parse HEAD)" != "$(git rev-parse HEAD@{1})" ]]
   else
+    # Fresh clone or no reflog - assume we want to process files
     return 0
   fi
 }
@@ -779,8 +779,10 @@ fi
 log_header "Dotfiles Update Script"
 
 if [[ "$SKIP_NOTICE" == false ]]; then
-  log_info "This script will update your configuration files by syncing them with the repository."
-  log_info "For a full reinstall/update of dependencies, use './setup install --update'."
+  log_warning "THIS SCRIPT IS NOT FULLY TESTED AND MAY CAUSE ISSUES!"
+  log_warning "It might be safer if you want to preserve your modifications and not delete added files,"
+  log_warning "  but this can cause partial updates and therefore unexpected behavior like in #1856."
+  log_warning "In general, prefer \"./setup install\" for updates if available."
   safe_read "Continue? (y/N): " response "N"
 
   if [[ ! "$response" =~ ^[Yy]$ ]]; then
@@ -1140,8 +1142,6 @@ if [[ "$DRY_RUN" == true ]]; then
   log_warning "DRY-RUN MODE: No changes were actually made"
   log_info "Run without -n/--dry-run to apply changes"
 else
-  # Update version signature
-  git rev-parse HEAD > "$VERSION_FILE" 2>/dev/null || true
   log_success "Dotfiles update completed successfully!"
 fi
 

@@ -1,10 +1,11 @@
-# Handle args for subcmd: update
+# Handle args for subcmd: exp-update
 # shellcheck shell=bash
 
 showhelp(){
-echo -e "Syntax: $0 update [OPTIONS]...
+echo -e "Syntax: $0 exp-update [OPTIONS]...
 
-Update dotfiles by syncing configuration files to home directory.
+Experimental updating without full reinstall.
+Updates dotfiles by syncing configuration files to home directory.
 
 Options:
   -f, --force        Force check all files even if no new commits
@@ -12,7 +13,7 @@ Options:
   -n, --dry-run      Show what would be done without making changes
   -v, --verbose      Enable verbose output
   -h, --help         Show this help message
-  -s, --skip-notice  Skip update notice
+  -s, --skip-notice  Skip notice about script being untested
       --non-interactive
                      Set default choice for file conflicts
                         replace: Replace local     keep: Keep local         old:  Backup as .old
@@ -25,6 +26,13 @@ This script updates your dotfiles by:
   3. Optionally rebuilding packages (if -p flag is used)
   4. Syncing configuration files to home directory
   5. Updating script permissions
+
+Ignore file patterns support:
+  - Exact matches (e.g., 'path/to/file')
+  - Directory patterns (e.g., 'path/to/dir/')
+  - Wildcards (e.g., '*.log', 'path/*/file')
+  - Root-relative patterns (e.g., '/.config')
+  - Substring matching (prefix with '**', e.g., '**temp' matches any path containing 'temp')
 "
 }
 # `man getopt` to see more
